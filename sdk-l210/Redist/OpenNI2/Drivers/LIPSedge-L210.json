@@ -1,0 +1,13 @@
+{
+    "debug": {
+        "logLevel": "verbose",
+        "defaultRes": "VGA",
+        "showFPS": {
+            "enable": false,
+            "interval": 10
+        }
+    },
+    "config": {
+        "version": "1.6.0"
+    }
+}

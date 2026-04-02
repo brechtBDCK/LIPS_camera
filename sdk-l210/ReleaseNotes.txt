@@ -1,0 +1,98 @@
+LIPSedge L210/215 Camera SDK Release Notes
+
+Version 2.4.4.2_v1.6.0 (11/27/2023)
+===================================================
+OpenNI2 version: 2.4.4.2
+Driver version : v1.6.0
+
+What's new
+
+1. Linux SDK first release and with new installer design.
+
+To unpack new LIPSedge SDK, change file to executable and run it,
+and follow program's instruction to conplete SDK installation.
+
+$ chmod +x LIPSedge-L210-SDK-Linux-amd64-2.4.4.2_v1.6.0.xz.run
+$ ./LIPSedge-L210-SDK-Linux-amd64-2.4.4.2_v1.6.0.xz.run
+
+Changes
+
+1. lipsedge-sdk-0 amd64 deb package updates to 1.1.1
+
+
+
+------------------------------------------------
+
+LIPSedge L210/215 Camera SDK Release Notes
+
+Version 2.4.4.2_v1.6.0 (10/30/2023)
+===================================================
+OpenNI2 version: 2.4.4.2
+Driver version : v1.6.0
+
+What's new
+
+1. Windows Desktop program icon changes to device picture.
+
+
+
+
+------------------------------------------------
+
+
+LIPSedge L210/215 Camera SDK Release Notes
+
+Version 2.4.4.2_v1.6.0 (9/26/2023)
+===================================================
+OpenNI2 version: 2.4.4.2
+Driver version : v1.6.0
+
+What's new
+
+1. LIPSedge OpenNI2 SDK now supports LIPSedge L210/215 Structured-Light Camera
+
+2. In SDK's Start Menu folder, add shortcut 'Run LIPS tools' for user to quick launch LIPSedge sample programs.
+   Add shortcut 'LIPS tools source code' as your start point to develop OpenNI2 applications.
+
+3. After LIPSedge L210/215 USB driver install completed, camera can be recognized as one of 'libusbK Usb Device',
+   and device name is 'LIPSedge L210/215', then you are ready to go and run LIPS tools.
+
+4. Modify OpenNI.ini to only load 2 device drivers:
+   1) OniFile (for NiViewer playing .oni file)
+   2) LIPSedge-L210
+
+If you want to change this part, edit file OpenNI.ini to modify the line "List=AA,BB,CC"
+You can provide multiple device drivers in this line to tell OpenNI2 to load them in the
+Drivers Repositoy.
+
+In OpenNI.ini you can modify below setting:
+
+[Drivers]
+; List of drivers to load, separated by commas. When not provided, OpenNI will try to load each shared library in Repository.
+List=libOniFile.so,libLIPSedge-L210.so
+
+
+Changes
+
+1. SDK installation locaiton changed.
+   e.g. LIPSedge L210/215 SDK is installed to "C:\Program Files\LIPSedge Camera SDK 1.01\L210 2.4.4.2_v1.6.0"
+   main folder is named "LIPSedge Camera SDK" and 1.01 is the all-in-one SDK package version
+   sub folder is for LIPSedge camera, 2.4.4.2 is OpenNI2 version, v1.6.0 is camera driver version.
+
+2. LIPSedge sample location changed.
+   e.g. LIPSedge sample code is installed to "C:\ProgramData\LIPSedge Camera SDK 1.01\L210 2.4.4.2_v1.6.0\OpenNI2\LIPSedgeSamples".
+
+3. Install shortcuts to user's desktop.
+   e.g. LIPSedge L210/215 SDK installation will create shortcut 'LIPSedge-L210-SDK-v1.6.0' on Desktop to provide SDK information/manual and programs.
+
+4. LIPSedge L210/215 drivers for OpenNI2 has changed name to 'LIPSedge-L210.dll" (previous name is 'DeviceModule2_SL.dll')
+   so user can differentiate it from other LIPSedge camera drivers.
+
+5. LIPSedge L210/215 camera config file name has changed to 'LIPSedge-L210.json" (previous name is 'ModuleConfig_SL.json'),
+   and installed location changed to '<SDK path>\OpenNI2\Drivers\', so L210/215 OpenNi2 drivers can find it.
+
+6. After SDK installation, the path '<SDK path>\OpenNI2\Redist\' will be added to user PATH variable.
+   Your OpenNI2 program can read it to find necessary library and LIPSedge camera driver.
+
+
+------------------------------------------------
