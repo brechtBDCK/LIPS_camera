@@ -2,18 +2,6 @@
 
 This document is a practical Python-facing reference for the LIPSedge L210/L215 camera as it is used in this repository.
 
-It combines four sources:
-
-- The checked-in Python samples in `dev-doc-code-samples/python/`
-- The upstream `openni` Python wrapper API (`openni.openni2`)
-- The LIPS custom property header at `sdk-l210/Include/LIPSNICustomProperty.h`
-- The checked-in calibration and mode summary in `camera_intrinsics.json`
-
-Important scope note:
-
-- This file documents the Python API and camera options that are visible from the wrapper and repo assets.
-- Some LIPS vendor properties are exposed only as numeric property IDs. For those, this file lists the property, expected type where known, and intended use.
-- A few firmware-specific enum values are not defined anywhere in the checked-in files. Those are called out explicitly instead of guessed.
 
 ## Quick Facts
 
@@ -23,7 +11,7 @@ Important scope note:
 | SDK style | OpenNI2-compatible driver with LIPS custom extensions |
 | Python package | `openni` |
 | Streams | `color`, `depth`, `ir` |
-| Depth unit on this camera | `1 mm` depth pixels |
+| Depth formats seen for this camera family | `DEPTH_1_MM` and `DEPTH_100_UM` |
 | Registration modes | `IMAGE_REGISTRATION_OFF`, `IMAGE_REGISTRATION_DEPTH_TO_COLOR` |
 | Recommended working distance | `40-120 cm` |
 | Light/environment guidance | Avoid direct sunlight and illumination above `1000 lux` |
@@ -80,6 +68,8 @@ These are the modes present in `camera_intrinsics.json`. Treat them as the known
 
 ### Depth Stream With Registration Off
 
+The checked-in `camera_intrinsics.json` only records the calibrated `DEPTH_1_MM` view of these modes. The Windows viewer reportedly also exposes a `DEPTH_100_UM` option on this camera family.
+
 | Resolution | Pixel format | HFOV | VFOV | When to use |
 | --- | --- | --- | --- | --- |
 | `640x480` | `DEPTH_1_MM` | `74.52 deg` | `50.83 deg` | General depth work |
@@ -98,7 +88,8 @@ With registration enabled, depth uses color-aligned intrinsics.
 
 Notes:
 
-- The checked-in JSON gives resolutions and intrinsics, not a complete FPS table.
+- The checked-in JSON gives resolutions and intrinsics for the `1 mm` depth format, not a complete FPS table and not the full pixel-format list exposed by the runtime/viewer.
+- Based on your viewer observation, this camera should also support `openni2.PIXEL_FORMAT_DEPTH_100_UM` in at least some depth modes.
 - To inspect the actual supported `fps` values on your connected device, enumerate `device.get_sensor_info(...).videoModes`.
 
 Example:
@@ -159,7 +150,7 @@ These come from the upstream `openni.openni2` wrapper.
 | Constant | Value | Meaning | Typical stream |
 | --- | --- | --- | --- |
 | `openni2.PIXEL_FORMAT_DEPTH_1_MM` | `100` | 16-bit depth in millimeters | Depth |
-| `openni2.PIXEL_FORMAT_DEPTH_100_UM` | `101` | 16-bit depth in `0.1 mm` units | Not the mode documented for this camera snapshot |
+| `openni2.PIXEL_FORMAT_DEPTH_100_UM` | `101` | 16-bit depth in `0.1 mm` units | Depth, when the device mode table/viewer exposes the higher-resolution depth format |
 | `openni2.PIXEL_FORMAT_SHIFT_9_2` | `102` | Shift format | Rarely used directly in Python |
 | `openni2.PIXEL_FORMAT_SHIFT_9_3` | `103` | Shift format | Rarely used directly in Python |
 | `openni2.PIXEL_FORMAT_RGB888` | `200` | 8-bit RGB triplets | Color |
@@ -548,6 +539,12 @@ These are useful when you want to use generic `get_property()` / `set_property()
 
 These are the camera-specific extensions from `sdk-l210/Include/LIPSNICustomProperty.h`.
 
+Verification note:
+
+- Everything in this section is `Declared by LIPS SDK header`.
+- These properties were not confirmed on a live camera from this session.
+- Treat them as supported entry points that still need on-device validation, especially for opaque IMU and face-recognition payloads.
+
 ### How to Access Them From Python
 
 The Python wrapper does not define symbolic constants for these LIPS properties, so use raw numeric IDs plus `device.get_property()` / `device.set_property()` or `stream.get_property()` / `stream.set_property()`.
@@ -814,6 +811,17 @@ depth.configure_mode(
 depth.start()
 ```
 
+If your device advertises the higher-resolution depth format in `videoModes`, you can request that instead:
+
+```python
+depth.configure_mode(
+    width=640,
+    height=480,
+    fps=30,
+    pixel_format=openni2.PIXEL_FORMAT_DEPTH_100_UM,
+)
+```
+
 ### Read intrinsics from LIPS custom properties
 
 ```python
@@ -852,3 +860,9 @@ If you only need to build applications, the main things to remember are:
 - Use registration for RGB/depth alignment and `convert_depth_to_world()` for real 3D geometry.
 - Use `get_sensor_info(...).videoModes` before changing modes.
 - Use LIPS custom property IDs when you need calibration data, laser control, lens mode switching, IMU access, temperature, or low-level sensor control.
+
+What I could and could not verify from this environment:
+
+- Verified: the Python binding imports from `.venv`, and the documented core API names are real.
+- Verified: the repo samples cover the documented workflows for streaming, registration, thresholding, background removal, and recording.
+- Not verified live: camera connection, supported mode list from the actual device, and LIPS custom property behavior on your attached unit.

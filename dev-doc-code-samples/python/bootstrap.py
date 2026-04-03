@@ -5,6 +5,6 @@ from pathlib import Path
 
 def prepare_openni() -> None:
     root = Path(__file__).resolve().parents[2]
-    sdk = root / "sdk-l210"
+    sdk = root / "sdk-Lseries"
     ctypes.CDLL(str(sdk / "compat" / "libtbb.so.2"), mode=ctypes.RTLD_GLOBAL)
     os.environ["OPENNI2_REDIST"] = str(sdk / "Redist")
