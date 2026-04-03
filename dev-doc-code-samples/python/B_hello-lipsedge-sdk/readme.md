@@ -39,7 +39,7 @@ uris = openni2.Device.enumerate_uris()
 > Or you can use `open(openni::ANY_DEVICE)` to connect to the first found device.
 
 ```python
-device = openni2.Device.open_file(uris[0])
+device = openni2.Device.open_any()
 deviceInfo = device.get_device_info()
 print(f'Name: {deviceInfo.name}')
 print(f'Uri: {deviceInfo.uri}')
@@ -47,6 +47,12 @@ print(f'USB Product ID: {deviceInfo.usbProductId}')
 print(f'USB Vendor ID: {deviceInfo.usbVendorId}')
 print(f'Vendor: {deviceInfo.vendor}')
 ```
+
+## Troubleshooting
+
+- If the device is listed but camera open fails on Linux, check that `sdk-l210/install.sh` completed successfully and installed `/etc/udev/rules.d/99-LIPSedge-video.rules`.
+- The vendor driver depends on the legacy Intel TBB runtime `libtbb.so.2` (`libtbb2`). On Ubuntu 24.04 this is not provided by default.
+- In WSL, the process also needs working USB passthrough. If `/dev/bus/usb` is missing, attach the camera into WSL first.
 
 - Close camera and deconstruct OpenNI SDK
 

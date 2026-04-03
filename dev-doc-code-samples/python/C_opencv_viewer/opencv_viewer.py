@@ -1,8 +1,14 @@
 import os
 import sys
+from pathlib import Path
 import cv2
 from openni import openni2
 import numpy as np
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from bootstrap import prepare_openni
+
+prepare_openni()
 
 openni2.initialize(os.environ['OPENNI2_REDIST'])
 uris = openni2.Device.enumerate_uris()
@@ -11,7 +17,7 @@ if not uris:
     print('Camera not found')
     sys.exit(0)
 
-device = openni2.Device.open_file(uris[0])
+device = openni2.Device.open_any()
 
 color = device.create_color_stream()
 color.start()
@@ -19,37 +25,33 @@ color.start()
 depth = device.create_depth_stream()
 depth.start()
 
-overlappingMat = None
-enableRegistration = False
+ir = device.create_ir_stream()
+ir.start()
 
 while True:
     rgbFrame = color.read_frame()
     rgbMat = np.frombuffer(rgbFrame.get_buffer_as_uint8(), dtype=np.uint8).reshape(rgbFrame.height, rgbFrame.width, 3)
     rgbMat = cv2.cvtColor(rgbMat, cv2.COLOR_BGR2RGB)
+    cv2.imshow('RGB', rgbMat)
 
     depthFrame = depth.read_frame()
     depthMat = np.frombuffer(depthFrame.get_buffer_as_uint16(), dtype=np.uint16).reshape(depthFrame.height, depthFrame.width, 1)
     depthMat = cv2.convertScaleAbs(depthMat, alpha=255.0 / 1024.0)
     depthMat = cv2.applyColorMap(depthMat, cv2.COLORMAP_JET)
+    cv2.imshow('Depth', depthMat)
 
-    if depthMat.shape != rgbMat.shape[:2]:
-        rgbMat = rgbMat[:depthMat.shape[0], :depthMat.shape[1]]
-
-    overlappingMat = cv2.addWeighted(rgbMat, 0.8, depthMat, 0.2, 0.0)
-    
-
-    cv2.imshow("Align", overlappingMat)
+    irFrame = ir.read_frame()
+    irMat = np.frombuffer(irFrame.get_buffer_as_uint16(), dtype=np.uint16).reshape(irFrame.height, irFrame.width, 1)
+    irMat = cv2.convertScaleAbs(irMat, alpha=255.0 / 1024.0)
+    cv2.imshow('IR', irMat)
 
     input = cv2.waitKey(1)
     if input == ord('q'):
         break
-    elif input == ord('a'):
-        enableRegistration = not enableRegistration
-        device.set_image_registration_mode(openni2.IMAGE_REGISTRATION_DEPTH_TO_COLOR if enableRegistration else openni2.IMAGE_REGISTRATION_OFF)
-        print(f"Image Registration: {'Enable' if enableRegistration else 'Disable'}")
 
 cv2.destroyAllWindows()
 color.stop()
 depth.stop()
+ir.stop()
 device.close()
 openni2.unload()

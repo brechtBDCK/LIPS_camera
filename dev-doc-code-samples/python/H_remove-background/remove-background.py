@@ -1,8 +1,14 @@
 import os
 import sys
+from pathlib import Path
 import cv2
 from openni import openni2
 import numpy as np
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from bootstrap import prepare_openni
+
+prepare_openni()
 
 openni2.initialize(os.environ['OPENNI2_REDIST'])
 uris = openni2.Device.enumerate_uris()
@@ -11,7 +17,7 @@ if not uris:
     print('Camera not found')
     sys.exit(0)
 
-device = openni2.Device.open_file(uris[0])
+device = openni2.Device.open_any()
 device.set_image_registration_mode(openni2.IMAGE_REGISTRATION_DEPTH_TO_COLOR)
 
 color = device.create_color_stream()

@@ -1,0 +1,2 @@
+export OPENNI2_INCLUDE=/home/bdck/PROJECTS_WSL/LIPS_camera/sdk-l210/Include
+export OPENNI2_REDIST=/home/bdck/PROJECTS_WSL/LIPS_camera/sdk-l210/Redist

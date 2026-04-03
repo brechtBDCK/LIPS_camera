@@ -1,8 +1,14 @@
 import os
 import sys
+from pathlib import Path
 import cv2
 from openni import openni2
 import numpy as np
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from bootstrap import prepare_openni
+
+prepare_openni()
 
 openni2.initialize(os.environ['OPENNI2_REDIST'])
 uris = openni2.Device.enumerate_uris()
@@ -11,7 +17,7 @@ if not uris:
     print('Camera not found')
     sys.exit(0)
 
-device = openni2.Device.open_file(uris[0])
+device = openni2.Device.open_any()
 
 color = device.create_color_stream()
 color.start()
@@ -21,6 +27,13 @@ depth.start()
 
 ir = device.create_ir_stream()
 ir.start()
+
+recorder = openni2.Recorder("record.oni".encode('utf-8'))
+recorder.attach(color)
+recorder.attach(depth)
+recorder.attach(ir)
+
+isRecording = False
 
 while True:
     rgbFrame = color.read_frame()
@@ -42,6 +55,16 @@ while True:
     input = cv2.waitKey(1)
     if input == ord('q'):
         break
+    elif input == ord('r'):
+        if not isRecording:
+            recorder.start()
+            print("Start recording")
+            isRecording = True
+    elif input == ord('s'):
+        if isRecording:
+            recorder.stop()
+            print("Stop recording")
+            isRecording = False
 
 cv2.destroyAllWindows()
 color.stop()
