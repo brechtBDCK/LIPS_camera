@@ -5,6 +5,8 @@ Ideal working distance: 40-120 cm
 avoid installing the camera at places under direct sunlight or with an illumination level above 1000 lux.
 
 Tested on WSL, ubuntu version 24
+It works better on windows! Something to do with wsl makes it super slow, banding, rolling shutter effect, etc.
+No problem in windows :) 
 
 ## Setup
 

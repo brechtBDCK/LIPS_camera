@@ -37,19 +37,12 @@ openni2.initialize(os.environ["OPENNI2_REDIST"])
 device = openni2.Device.open_any()
 ```
 
-Use this when:
-
-- You want the repo-local SDK binaries, not a system OpenNI install.
-- You are running the samples in this workspace.
-
 Returns:
 
 - `openni2.initialize(...)` initializes the OpenNI runtime.
 - `openni2.Device.open_any()` returns an opened `Device`.
 
 ## Camera Streams and Known Calibrated Modes
-
-These are the modes present in `camera_intrinsics.json`. Treat them as the known calibrated modes for this unit or camera family snapshot.
 
 ### Color Stream
 
@@ -66,31 +59,7 @@ These are the modes present in `camera_intrinsics.json`. Treat them as the known
 | `640x400` | `GRAY16` | `74.52 deg` | `50.83 deg` | Lower height, reduced processing/load |
 | `1280x800` | `GRAY16` | `74.52 deg` | `50.83 deg` | High-detail IR inspection |
 
-### Depth Stream With Registration Off
 
-The checked-in `camera_intrinsics.json` only records the calibrated `DEPTH_1_MM` view of these modes. The Windows viewer reportedly also exposes a `DEPTH_100_UM` option on this camera family.
-
-| Resolution | Pixel format | HFOV | VFOV | When to use |
-| --- | --- | --- | --- | --- |
-| `640x480` | `DEPTH_1_MM` | `74.52 deg` | `50.83 deg` | General depth work |
-| `640x400` | `DEPTH_1_MM` | `74.52 deg` | `50.83 deg` | Lower-height depth stream |
-| `1280x800` | `DEPTH_1_MM` | `74.52 deg` | `50.83 deg` | High-detail depth capture |
-
-### Depth Stream With Registration On
-
-With registration enabled, depth uses color-aligned intrinsics.
-
-| Resolution | Pixel format | HFOV | VFOV | When to use |
-| --- | --- | --- | --- | --- |
-| `640x480` | `DEPTH_1_MM` | `76.3 deg` | `51.83 deg` | RGB/depth overlays, segmentation on color image |
-| `640x400` | `DEPTH_1_MM` | `76.3 deg` | `51.83 deg` | Same, lower height |
-| `1280x800` | `DEPTH_1_MM` | `64.3 deg` | `42.89 deg` | High-res color-aligned depth |
-
-Notes:
-
-- The checked-in JSON gives resolutions and intrinsics for the `1 mm` depth format, not a complete FPS table and not the full pixel-format list exposed by the runtime/viewer.
-- Based on your viewer observation, this camera should also support `openni2.PIXEL_FORMAT_DEPTH_100_UM` in at least some depth modes.
-- To inspect the actual supported `fps` values on your connected device, enumerate `device.get_sensor_info(...).videoModes`.
 
 Example:
 
@@ -128,7 +97,7 @@ These come from the upstream `openni.openni2` wrapper.
 | `openni2.get_log_filename()` | none | `bytes` or `None` | Find the current SDK log file | Returns `None` when file logging is disabled |
 | `openni2.get_bytes_per_pixel(format)` | pixel format constant | currently unusable | Avoid in stock wrapper | The upstream wrapper calls the C API but does not return the value |
 
-## Constants You Will Actually Use
+## Constants 
 
 ### Sensor Constants
 
@@ -368,7 +337,7 @@ Note:
 
 ### Camera Settings
 
-`stream.camera` is available when the stream supports standard camera controls. In practice this is most relevant for the color stream.
+`stream.camera` is available when the stream supports standard camera controls. In practice this is most relevant for the color stream. Should in theory not be changed manually.
 
 | API | Input | Output | When to use |
 | --- | --- | --- | --- |
@@ -539,12 +508,6 @@ These are useful when you want to use generic `get_property()` / `set_property()
 
 These are the camera-specific extensions from `sdk-l210/Include/LIPSNICustomProperty.h`.
 
-Verification note:
-
-- Everything in this section is `Declared by LIPS SDK header`.
-- These properties were not confirmed on a live camera from this session.
-- Treat them as supported entry points that still need on-device validation, especially for opaque IMU and face-recognition payloads.
-
 ### How to Access Them From Python
 
 The Python wrapper does not define symbolic constants for these LIPS properties, so use raw numeric IDs plus `device.get_property()` / `device.set_property()` or `stream.get_property()` / `stream.set_property()`.
@@ -692,27 +655,6 @@ When to use sensor properties:
 - Controlled power-state changes
 - Vendor-supported raw tuning or diagnostics
 
-### Deprecated Property
-
-| Property | ID | Type | Meaning |
-| --- | --- | --- | --- |
-| `LIPS_CONFIG_LENS_MODE` | `500` | `int` | Deprecated, replaced by `LIPS_DEVICE_CONFIG_LENS_MODE` |
-
-### Face Recognition Properties
-
-These are listed in the header even though this repo does not include Python samples for them.
-
-| Property | ID | Type | Read/Write | Use |
-| --- | --- | --- | --- | --- |
-| `LIPS_DEVICE_FACE_RECOGNITION` | `600` | vendor-defined payload/result | read/write | Trigger recognition and read result |
-| `LIPS_DEVICE_FACE_REGISTRATION` | `601` | vendor-defined payload/result | read/write | Enroll a new face |
-| `LIPS_DEVICE_FACE_DELETE_DATABASE` | `602` | vendor-defined payload/result | read/write | Delete one or all enrolled faces |
-| `LIPS_DEVICE_FACE_NUMBER_REGISTERED` | `603` | integer-like result | read | Check how many faces are stored |
-
-Use them only if:
-
-- Your camera firmware and SDK bundle include the LIPSFace-capable feature set.
-- You have the exact vendor workflow and expected payload/result types.
 
 ## Driver JSON Settings in This Repo
 
@@ -740,61 +682,7 @@ Notes:
 - They affect the vendor driver behavior before frames reach Python.
 - The file in this repo is small and not a full schema reference, so treat these as the settings known to exist here.
 
-## Practical Task-to-API Map
-
-| Task | Best API / sample | Why |
-| --- | --- | --- |
-| Detect the camera and print identity | `hello-lipsedge-sdk.py` | Minimal connectivity check |
-| Preview RGB, depth, and IR | `opencv_viewer.py` | Straightest live-view pipeline |
-| Read one pixel's depth | `depth-data.py` | Fast way to inspect metric depth values |
-| Crop to a region of interest | `roi.py` or `stream.set_cropping(...)` | OpenCV ROI is simpler, hardware crop is more efficient |
-| Overlay depth on color | `align-depth-color.py` plus registration | Correct geometric alignment |
-| Segment a person or object by distance | `range-filter.py` / `remove-background.py` | Uses the depth stream's millimeter values directly |
-| Record a replayable session | `record.py` | Produces `.oni` files usable in OpenNI tools |
-| Enumerate supported modes | `device.get_sensor_info(...).videoModes` | Discover valid width/height/fps/format tuples |
-| Build a point cloud or 3D measurements | `convert_depth_to_world(...)` | Maps image pixels into metric 3D space |
-| Do custom calibration / registration math | LIPS stream properties `200-224` | Gives intrinsics, extrinsics, and distortion data |
-| Change optical working mode | LIPS device property `304` | Near/normal lens mode |
-| Turn the emitter on or off | LIPS device property `307` | Direct hardware control |
-| Enable IMU access | LIPS device properties `308` and `306` or stream `204` | Motion-aware applications |
-
-## Sample Scripts in This Repo
-
-| File | What it demonstrates |
-| --- | --- |
-| `dev-doc-code-samples/python/A_environment_setup/environment_setup.py` | Verifies environment setup |
-| `dev-doc-code-samples/python/B_hello-lipsedge-sdk/hello-lipsedge-sdk.py` | Device enumeration and camera info |
-| `dev-doc-code-samples/python/C_opencv_viewer/opencv_viewer.py` | RGB/depth/IR acquisition and display |
-| `dev-doc-code-samples/python/D_roi/roi.py` | ROI extraction |
-| `dev-doc-code-samples/python/E_depth-data/depth-data.py` | Pixel-by-pixel depth readout |
-| `dev-doc-code-samples/python/F_align-depth-color/align-depth-color.py` | Registration and overlay |
-| `dev-doc-code-samples/python/G_range-filter/range-filter.py` | Depth thresholding by distance |
-| `dev-doc-code-samples/python/H_remove-background/remove-background.py` | Background removal with registered depth |
-| `dev-doc-code-samples/python/I_record/record.py` | `.oni` recording |
-
-## Caveats and Repo-Specific Notes
-
-- The Python package `openni` is an OpenNI wrapper, not a LIPS-specific Python SDK. LIPS-specific features come through generic numeric property IDs.
-- The wrapper exposes many C-level capabilities but not all of them ergonomically. Device string properties and opaque vendor structs may require extra ctypes work.
-- The checked-in `camera_intrinsics.json` includes intrinsics and calibrated resolutions but does not enumerate every supported FPS value.
-- `sdk-l210/Redist/OpenNI2/Drivers/LIPSedge-L210.json` contains a small driver config block for debug and post-processing, but it is not a complete capability table.
-- The upstream wrapper function `get_bytes_per_pixel()` appears incomplete because it does not return the C API value.
-- The upstream wrapper helper name `get_recoder()` is misspelled.
-
 ## Minimal Utility Snippets
-
-### Check registration support
-
-```python
-from openni import openni2
-
-if device.is_image_registration_mode_supported(
-    openni2.IMAGE_REGISTRATION_DEPTH_TO_COLOR
-):
-    device.set_image_registration_mode(
-        openni2.IMAGE_REGISTRATION_DEPTH_TO_COLOR
-    )
-```
 
 ### Switch to a chosen mode
 
@@ -842,27 +730,3 @@ extr = depth.get_property(221, CameraExtrinsicMatrix)
 rotation = [[extr.rotation[r][c] for c in range(3)] for r in range(3)]
 translation_mm = [extr.translation[i] for i in range(3)]
 ```
-
-### Toggle low-power mode
-
-```python
-LIPS_DEPTH_SENSOR_LOW_POWER_EN = 403
-
-device.set_property(LIPS_DEPTH_SENSOR_LOW_POWER_EN, 1)  # low power
-device.set_property(LIPS_DEPTH_SENSOR_LOW_POWER_EN, 0)  # normal
-```
-
-## Bottom Line
-
-If you only need to build applications, the main things to remember are:
-
-- Use `Device`, `VideoStream`, `VideoFrame`, `Recorder`, and the coordinate converters from `openni2`.
-- Use registration for RGB/depth alignment and `convert_depth_to_world()` for real 3D geometry.
-- Use `get_sensor_info(...).videoModes` before changing modes.
-- Use LIPS custom property IDs when you need calibration data, laser control, lens mode switching, IMU access, temperature, or low-level sensor control.
-
-What I could and could not verify from this environment:
-
-- Verified: the Python binding imports from `.venv`, and the documented core API names are real.
-- Verified: the repo samples cover the documented workflows for streaming, registration, thresholding, background removal, and recording.
-- Not verified live: camera connection, supported mode list from the actual device, and LIPS custom property behavior on your attached unit.
