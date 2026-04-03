@@ -4,7 +4,11 @@ Small Python workspace for testing a LIPS camera with OpenNI and OpenCV.
 Ideal working distance: 40-120 cm
 avoid installing the camera at places under direct sunlight or with an illumination level above 1000 lux.
 
+Tested on WSL, ubuntu version 24
+
 Standard camera settings can be adjustment in the LIPSedge-L210.json
+RGB is rolling shutter, depth is global sutter
+
 ## Files
 
 - `main.py` prints the detected OpenNI version and OpenCV version.

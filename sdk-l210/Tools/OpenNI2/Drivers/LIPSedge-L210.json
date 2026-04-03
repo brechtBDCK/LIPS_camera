@@ -9,5 +9,13 @@
     },
     "config": {
         "version": "1.6.0"
+    },
+    "post-processing": {
+       "enable": false,
+       "debug": false,
+       "sigma-spatial": 40,
+       "sigma-spatial_help": "scope 1 to 100",
+       "sigma-range": 21,
+       "sigma-range_help": "scope 1 to 100"
     }
 }

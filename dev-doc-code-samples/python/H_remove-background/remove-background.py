@@ -21,9 +21,11 @@ device = openni2.Device.open_any()
 device.set_image_registration_mode(openni2.IMAGE_REGISTRATION_DEPTH_TO_COLOR)
 
 color = device.create_color_stream()
-color.start()
-
 depth = device.create_depth_stream()
+
+assert color is not None
+assert depth is not None
+color.start()
 depth.start()
 
 thresholdValueUp = 530
@@ -31,12 +33,12 @@ thresholdValueDown = 385
 
 while True:
     rgbFrame = color.read_frame()
-    rgbMat = np.frombuffer(rgbFrame.get_buffer_as_uint8(), dtype=np.uint8).reshape(rgbFrame.height, rgbFrame.width, 3)
+    rgbMat = np.frombuffer(rgbFrame.get_buffer_as_uint8(), dtype=np.uint8).reshape(getattr(rgbFrame, "height"), getattr(rgbFrame, "width"), 3)
     rgbMat = cv2.cvtColor(rgbMat, cv2.COLOR_BGR2RGB)
     cv2.imshow('Origin', rgbMat)
 
     depthFrame = depth.read_frame()
-    depthMat = np.frombuffer(depthFrame.get_buffer_as_uint16(), dtype=np.uint16).reshape(depthFrame.height, depthFrame.width, 1)
+    depthMat = np.frombuffer(depthFrame.get_buffer_as_uint16(), dtype=np.uint16).reshape(getattr(depthFrame, "height"), getattr(depthFrame, "width"), 1)
 
     if depthMat.shape != rgbMat.shape[:2]:
             rgbMat = rgbMat[:depthMat.shape[0], :depthMat.shape[1]]
